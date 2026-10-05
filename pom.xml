@@ -23,10 +23,10 @@
             <groupId>jakarta.platform</groupId>
             <artifactId>jakarta.jakartaee-api</artifactId>
             <version>${jakartaee.version}</version>
-            <scope>provided</scope> <!-- Сервер сам предоставит эти библиотеки в рантайме -->
+            <scope>provided</scope>
         </dependency>
 
-        <!-- 2. PrimeFaces (UI-библиотека для JSF: таблицы с пагинацией, фильтрацией и модалки) -->
+
         <dependency>
             <groupId>org.primefaces</groupId>
             <artifactId>primefaces</artifactId>
@@ -34,25 +34,28 @@
             <classifier>jakarta</classifier>
         </dependency>
 
-        <!-- 3. Драйвер PostgreSQL (для связи с базой данных на pg/studs) -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>42.7.2</version>
         </dependency>
 
-        <!-- 4. Lombok (чтобы не писать вручную геттеры, сеттеры и конструкторы) -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
             <scope>provided</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <version>6.4.4.Final</version>
+        </dependency>
     </dependencies>
 
     <build>
         <plugins>
-            <!-- Плагин компиляции Java 17 с поддержкой генерации кода от Lombok -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -70,13 +73,11 @@
                 </configuration>
             </plugin>
 
-            <!-- Плагин сборки WAR (веб-архива) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
                 <version>3.4.0</version>
                 <configuration>
-                    <!-- В современном Jakarta EE файл web.xml необязателен -->
                     <failOnMissingWebXml>false</failOnMissingWebXml>
                 </configuration>
             </plugin>
