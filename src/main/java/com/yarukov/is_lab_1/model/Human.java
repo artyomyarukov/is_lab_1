@@ -1,6 +1,7 @@
 package com.yarukov.is_lab_1.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.*;
 
@@ -22,6 +23,7 @@ public class Human implements Serializable {
     private Long id;
 
     @Min(value = 1, message = "Возраст должен быть больше 0")
+    @Max(value = 150, message = "Возраст губернатора не может превышать 150 лет")
     @Column(name = "age")
     private Long age;
 }

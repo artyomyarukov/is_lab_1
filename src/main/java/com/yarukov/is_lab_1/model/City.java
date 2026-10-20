@@ -31,6 +31,9 @@ public class City implements Serializable {
 
     @NotNull(message = "Координаты обязательны для заполнения")
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
+    @Size(min = 1, max = 100, message = "Длина названия должна быть от 1 до 100 символов")
+    @Pattern(regexp = "^[a-zA-Zа-яА-ЯёЁ\\s\\-]+$",
+            message = "Название города может содержать только буквы (рус/англ), пробел и знак дефиса '-'")
     @JoinColumn(name = "coordinates_id", nullable = false)
     private Coordinates coordinates;
 
@@ -40,10 +43,12 @@ public class City implements Serializable {
 
     @DecimalMin(value = "0.0", inclusive = false, message = "Площадь должна быть строго больше 0")
     @Column(name = "area", nullable = false)
+    @DecimalMax(value = "1000000000.0", message = "Площадь не может превышать 1 млрд кв. км!")
     private double area;
 
     @NotNull(message = "Население не может быть пустым")
     @Min(value = 0, message = "Население не может быть отрицательным")
+    @Max(value = 100000000000L, message = "Население не может превышать 100 млрд человек!")
     @Column(name = "population", nullable = false)
     private Long population;
 
@@ -54,6 +59,8 @@ public class City implements Serializable {
     private Boolean capital;
 
     @Column(name = "meters_above_sea_level")
+    @DecimalMin(value = "-15000.0", message = "Высота не может быть ниже -15 000 м")
+    @DecimalMax(value = "15000.0", message = "Высота не может превышать 15 000 м")
     private Double metersAboveSeaLevel;
 
     @Min(value = 1, message = "Код автомобиля должен быть больше 0")
