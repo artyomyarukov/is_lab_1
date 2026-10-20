@@ -1,0 +1,39 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+
+package "com.yarukov.is_lab_1" {
+
+    package "controller" {
+        class CityBean <<ViewScoped>>
+        class SpecialOperationsBean <<ViewScoped>>
+    }
+
+    package "service" {
+        class CityService <<ApplicationScoped>>
+        class CitySpecialOperationsService <<ApplicationScoped>>
+    }
+
+    package "repository" {
+        class CityRepository <<ApplicationScoped>>
+        class EntityManagerProducer <<ApplicationScoped>>
+    }
+
+    package "model" {
+        class City <<Entity>>
+        class Coordinates <<Entity>>
+        class Human <<Entity>>
+        enum Climate
+        enum Government
+    }
+}
+
+
+controller ..> service : uses
+controller ..> model : uses
+service ..> repository : uses
+service ..> model : uses
+repository ..> model : manages
+
+@enduml

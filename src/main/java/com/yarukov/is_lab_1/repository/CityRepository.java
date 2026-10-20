@@ -94,8 +94,4 @@ public class CityRepository implements Serializable {
         }
     }
 
-
-
-
-
 }

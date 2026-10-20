@@ -1,0 +1,151 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam defaultFontName Arial
+
+package "model" {
+    enum Climate {
+        HUMIDSUBTROPICAL
+        MEDITERRANIAN
+        SUBARCTIC
+        TUNDRA
+    }
+
+    enum Government {
+        IDEOCRACY
+        OLIGARCHY
+        STRATOCRACY
+        THALASSOCRACY
+    }
+
+    class Coordinates <<Entity>> {
+        - id: Long
+        - x: Float
+        - y: Integer
+        + getId(): Long
+        + getX(): Float
+        + getY(): Integer
+    }
+
+    class Human <<Entity>> {
+        - id: Long
+        - age: Long
+        + getId(): Long
+        + getAge(): Long
+    }
+
+    class City <<Entity>> {
+        - id: Long
+        - name: String
+        - creationDate: LocalDateTime
+        - area: double
+        - population: Long
+        - establishmentDate: ZonedDateTime
+        - capital: Boolean
+        - metersAboveSeaLevel: Double
+        - carCode: Integer
+        - climate: Climate
+        - government: Government
+        - coordinates: Coordinates
+        - governor: Human
+        + getId(): Long
+        + getName(): String
+        + getPopulation(): Long
+        # onCreate(): void
+    }
+
+    City "many" --> "1" Coordinates : coordinates_id
+    City "many" --> "0..1" Human : governor_id
+    City --> "1" Climate
+    City --> "0..1" Government
+}
+
+package "repository" {
+    class EntityManagerProducer <<ApplicationScoped>> {
+        - {static} emf: EntityManagerFactory
+        + createEntityManager(): EntityManager
+        + closeEntityManager(em: EntityManager): void
+    }
+
+    class CityRepository <<ApplicationScoped>> {
+        - em: EntityManager
+        + create(city: City): void
+        + findById(id: Long): Optional<City>
+        + update(city: City): City
+        + delete(id: Long): void
+        + findAll(): List<City>
+        + findAllCoordinates(): List<Coordinates>
+        + createCoordinates(coords: Coordinates): void
+        + findAllHumans(): List<Human>
+        + createHuman(human: Human): void
+        - executeInTransaction(action: Runnable): void
+        - executeInTransactionWithResult(action: Supplier<T>): T
+    }
+}
+
+package "service" {
+    class CityService <<ApplicationScoped>> {
+        - cityRepository: CityRepository
+        + saveCity(city: City): void
+        + findById(id: Long): City
+        + deleteCity(id: Long): void
+        + getAllCities(): List<City>
+        + saveCityFromForm(city: City, coordsId: Long, newX: Float, newY: Integer, govAge: Long): void
+        + getAllCoordinates(): List<Coordinates>
+        + saveCoordinates(coords: Coordinates): void
+    }
+
+    class CitySpecialOperationsService <<ApplicationScoped>> {
+        - cityRepository: CityRepository
+        - cityService: CityService
+        + calculateSumMetersAboveSeaLevel(): double
+        + countMetersAboveSeaLevelGreaterThan(target: double): long
+        + getUniqueMetersAboveSeaLevel(): List<Double>
+        + relocatePopulationToMinCity(fromId: Long): void
+        + relocateCapitalPopulationToThreeMinCities(): void
+    }
+}
+
+package "controller" {
+    class CityBean <<ViewScoped>> {
+        - cityService: CityService
+        - pushContext: PushContext
+        - cities: List<City>
+        - selectedCity: City
+        - newCoordX: Float
+        - newCoordY: Integer
+        - newGovernor: Human
+        - selectedCoordinatesId: Long
+        + init(): void
+        + refreshData(): void
+        + saveCity(): void
+        + editCity(city: City): void
+        + deleteCity(id: Long): void
+        + openNew(): void
+    }
+
+    class SpecialOperationsBean <<ViewScoped>> {
+        - specialOpsService: CitySpecialOperationsService
+        - pushContext: PushContext
+        - targetMeters: Double
+        - countAboveMetersResult: Long
+        - sumMetersResult: Double
+        - uniqueMetersList: List<Double>
+        - relocateFromCityId: Long
+        + calculateSumMeters(): void
+        + calculateCountAboveMeters(): void
+        + calculateUniqueMeters(): void
+        + relocateToMinCity(): void
+        + relocateCapital(): void
+    }
+}
+
+
+CityBean ..> CityService : @Inject
+SpecialOperationsBean ..> CitySpecialOperationsService : @Inject
+CityService ..> CityRepository : @Inject
+CitySpecialOperationsService ..> CityRepository : @Inject
+CitySpecialOperationsService ..> CityService : @Inject
+CityRepository ..> EntityManagerProducer : uses
+
+@enduml
