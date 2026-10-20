@@ -8,7 +8,7 @@ import lombok.*;
 import java.io.Serializable;
 
 @Entity
-@Table(name = "coordinates")
+@Table(name = "lab1_coordinates")
 @Getter
 @Setter
 @NoArgsConstructor

@@ -1,7 +1,6 @@
 package com.yarukov.is_lab_1.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.Constraint;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
@@ -10,7 +9,7 @@ import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 
 @Entity
-@Table(name = "cities")
+@Table(name = "lab1_cities")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -25,13 +24,13 @@ public class City implements Serializable {
     @Column(name = "id", nullable = false, unique = true)
     private Long id;
 
-    @NotNull(message = "Название города не может быть пустым (null)")
+    @NotNull(message = "Название города не может быть пустым")
     @NotBlank(message = "Название города не может состоять из пробелов")
     @Column(name = "name", nullable = false)
     private String name;
 
     @NotNull(message = "Координаты обязательны для заполнения")
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
     @JoinColumn(name = "coordinates_id", nullable = false)
     private Coordinates coordinates;
 
@@ -43,8 +42,8 @@ public class City implements Serializable {
     @Column(name = "area", nullable = false)
     private double area;
 
-    @NotNull(message = "Население не может быть пустым (null)")
-    @Min(value = 1, message = "Население должно быть строго больше 0")
+    @NotNull(message = "Население не может быть пустым")
+    @Min(value = 0, message = "Население не может быть отрицательным")
     @Column(name = "population", nullable = false)
     private Long population;
 
@@ -71,7 +70,7 @@ public class City implements Serializable {
     @Column(name = "government")
     private Government government;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
     @JoinColumn(name = "governor_id")
     private Human governor;
 

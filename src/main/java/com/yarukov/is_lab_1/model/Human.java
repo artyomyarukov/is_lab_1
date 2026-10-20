@@ -7,7 +7,7 @@ import lombok.*;
 import java.io.Serializable;
 
 @Entity
-@Table(name = "humans")
+@Table(name = "lab1_humans")
 @Getter
 @Setter
 @NoArgsConstructor

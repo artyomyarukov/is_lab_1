@@ -12,10 +12,15 @@
         <class>com.yarukov.is_lab_1.model.City</class>
 
         <properties>
+            <!--
             <property name="jakarta.persistence.jdbc.driver" value="org.postgresql.Driver"/>
             <property name="jakarta.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/is_lab_1"/>
             <property name="jakarta.persistence.jdbc.user" value="postgres"/>
-            <property name="jakarta.persistence.jdbc.password" value="password"/>
+            <property name="jakarta.persistence.jdbc.password" value="password"/ -->
+            <property name="jakarta.persistence.jdbc.driver" value="org.postgresql.Driver"/>
+            <property name="jakarta.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/studs"/>
+            <property name="jakarta.persistence.jdbc.user" value="s466217"/>
+            <property name="jakarta.persistence.jdbc.password" value="CVsORk67IeOrAjNX"/>
 
             <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
             <property name="hibernate.hbm2ddl.auto" value="update"/>

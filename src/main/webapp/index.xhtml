@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:p="http://primefaces.org/ui">
+
+<h:head>
+    <title>Информационная система: Управление городами</title>
+    <meta charset="UTF-8"/>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin: 20px; background-color: #f4f6f9; }
+        .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        .field { margin-bottom: 15px; }
+        .field label { display: block; font-weight: bold; margin-bottom: 5px; }
+        .field input, .field select { width: 100%; }
+        .dialog-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    </style>
+
+    <script type="text/javascript">
+        function handleCityUpdate(message) {
+            console.log("WebSocket push пойман", message);
+            if (typeof updateTableRemoteCommand === 'function') {
+                updateTableRemoteCommand();
+            }
+        }
+    </script>
+</h:head>
+
+<h:body>
+
+    <p:growl id="messages" showDetail="true" keepAlive="true" life="4000"/>
+    <f:websocket channel="cityChannel" scope="application" onmessage="handleCityUpdate" />
+
+    <h:form id="mainForm">
+
+        <p:remoteCommand name="updateTableRemoteCommand"
+                         action="#{cityBean.refreshData}"
+                         update="citiesTable :messages"
+                         process="@this" />
+        <div class="card">
+            <p:menubar>
+                <p:menuitem value="Добавить город" icon="pi pi-plus"
+                            action="#{cityBean.openNew}"
+                            update=":dialogForm:cityDialog"
+                            oncomplete="PF('cityDialog').show()" />
+                <p:menuitem value="Специальные операции" icon="pi pi-calculator"
+                            onclick="PF('specialOpsDialog').show(); return false;" />
+                <p:menuitem value="Обновить таблицу" icon="pi pi-refresh"
+                            action="#{cityBean.refreshData}"
+                            update="citiesTable :messages" />
+            </p:menubar>
+        </div>
+
+        <div class="card">
+            <h2>Список городов</h2>
+            <p:dataTable id="citiesTable" var="city" value="#{cityBean.cities}"
+                         paginator="true" rows="10"
+                         paginatorPosition="bottom"
+                         emptyMessage="Городов пока нет в базе данных"
+                         styleClass="p-datatable-sm"
+                         responsiveLayout="scroll">
+
+                <p:column headerText="ID" sortBy="#{city.id}" width="60px">
+                    <h:outputText value="#{city.id}" />
+                </p:column>
+
+                <p:column headerText="Название" sortBy="#{city.name}" filterBy="#{city.name}" filterMatchMode="contains">
+                    <h:outputText value="#{city.name}" style="font-weight: bold;" />
+                </p:column>
+
+                <p:column headerText="Площадь" sortBy="#{city.area}">
+                    <h:outputText value="#{city.area}" />
+                </p:column>
+
+                <p:column headerText="Население" sortBy="#{city.population}">
+                    <h:outputText value="#{city.population}" />
+                </p:column>
+
+                <p:column headerText="Координаты (X, Y)">
+                    <h:outputText value="(#{city.coordinates.x}; #{city.coordinates.y})" />
+                </p:column>
+
+                <p:column headerText="Высота (м)" sortBy="#{city.metersAboveSeaLevel}">
+                    <h:outputText value="#{city.metersAboveSeaLevel != null ? city.metersAboveSeaLevel : '-'}" />
+                </p:column>
+
+                <p:column headerText="Авто-код" sortBy="#{city.carCode}">
+                    <h:outputText value="#{city.carCode != null ? city.carCode : '-'}" />
+                </p:column>
+
+                <p:column headerText="Климат" sortBy="#{city.climate}">
+                    <h:outputText value="#{city.climate}" />
+                </p:column>
+
+                <p:column headerText="Правление" sortBy="#{city.government}">
+                    <h:outputText value="#{city.government != null ? city.government : '-'}" />
+                </p:column>
+
+                <p:column headerText="Столица?">
+                    <h:outputText value="#{city.capital ? 'Да' : 'Нет'}" />
+                </p:column>
+
+                <p:column headerText="Мэр (Возраст)">
+                    <h:outputText value="#{city.governor != null ? city.governor.age : 'Нет'}" />
+                </p:column>
+
+
+                <p:column headerText="Действия" width="130px">
+                    <p:commandButton icon="pi pi-pencil" title="Редактировать"
+                                     styleClass="p-button-rounded p-button-success p-mr-2"
+                                     action="#{cityBean.editCity(city)}"
+                                     process="@this"
+                                     update=":dialogForm:cityDialog"
+                                     oncomplete="PF('cityDialog').show()" />
+
+                    <p:commandButton icon="pi pi-trash" title="Удалить"
+                                     styleClass="p-button-rounded p-button-danger"
+                                     action="#{cityBean.deleteCity(city.id)}"
+                                     update=":mainForm:citiesTable :messages">
+                        <p:confirm header="Подтверждение" message="Удалить город #{city.name}?" icon="pi pi-exclamation-triangle" />
+                    </p:commandButton>
+                </p:column>
+            </p:dataTable>
+        </div>
+
+        <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" width="350">
+            <p:commandButton value="Нет" type="button" styleClass="ui-confirmdialog-no ui-button-secondary" />
+            <p:commandButton value="Да" type="button" styleClass="ui-confirmdialog-yes ui-button-danger" />
+        </p:confirmDialog>
+    </h:form>
+
+
+    <h:form id="dialogForm">
+        <p:dialog id="cityDialog" header="Данные города" widgetVar="cityDialog" modal="true" responsive="true" width="700px">
+            <p:outputPanel id="cityDetail" rendered="#{not empty cityBean.selectedCity}">
+
+                <p:messages id="dialogMessages" showDetail="true" closable="true" />
+
+                <div class="dialog-grid">
+
+                    <div class="field">
+                        <label>Название города *</label>
+                        <p:inputText value="#{cityBean.selectedCity.name}"
+                                     required="true"
+                                     requiredMessage="Название города не может быть пустым!" />
+                    </div>
+
+                    <div class="field">
+                        <label>Площадь (строго > 0) *</label>
+                        <p:inputNumber value="#{cityBean.selectedCity.area}"
+                                       minValue="0.01" decimalPlaces="2"
+                                       required="true"
+                                       requiredMessage="Площадь обязательна и должна быть строго больше 0!" />
+                    </div>
+
+                    <div class="field">
+                        <label>Население (неотрицательное) *</label>
+                        <p:inputNumber value="#{cityBean.selectedCity.population}"
+                                       minValue="0" decimalPlaces="0"
+                                       required="true"
+                                       requiredMessage="Население обязательно для заполнения!" />
+                    </div>
+
+                    <div class="field">
+                        <label>Высота над уровнем моря (м)</label>
+                        <p:inputNumber value="#{cityBean.selectedCity.metersAboveSeaLevel}" decimalPlaces="2" />
+                    </div>
+
+                    <div class="field">
+                        <label>Код автомобиля (1 - 1000)</label>
+                        <p:inputNumber value="#{cityBean.selectedCity.carCode}"
+                                       minValue="1" maxValue="1000" decimalPlaces="0"
+                                       validatorMessage="Код автомобиля должен быть в диапазоне от 1 до 1000!" />
+                    </div>
+
+                    <div class="field">
+                        <label>Климат *</label>
+                        <p:selectOneMenu value="#{cityBean.selectedCity.climate}"
+                                         required="true"
+                                         requiredMessage="Климат обязателен для выбора!">
+                            <f:selectItem itemLabel="Выберите климат" itemValue="" noSelectionOption="true" />
+                            <f:selectItems value="#{cityBean.climates}" />
+                        </p:selectOneMenu>
+                    </div>
+
+                    <div class="field">
+                        <label>Форма правления</label>
+                        <p:selectOneMenu value="#{cityBean.selectedCity.government}">
+                            <f:selectItem itemLabel="Не выбрано" itemValue="#{null}" />
+                            <f:selectItems value="#{cityBean.governments}" />
+                        </p:selectOneMenu>
+                    </div>
+
+                    <div class="field">
+                        <label>Это столица?</label>
+                        <p:selectBooleanCheckbox value="#{cityBean.selectedCity.capital}" />
+                    </div>
+
+                    <div class="field" style="grid-column: span 2; background: #eef2f7; padding: 12px; border-radius: 6px;">
+                        <h4 style="margin-top:0;">Координаты города *</h4>
+
+                        <div style="margin-bottom: 10px;">
+                            <label>Выбрать существующие координаты:</label>
+                            <p:selectOneMenu value="#{cityBean.selectedCoordinatesId}">
+                                <f:selectItem itemLabel="-- Создать новые ниже --" itemValue="#{null}" />
+                                <f:selectItems value="#{cityBean.allCoordinates}" var="c"
+                                               itemLabel="ID: #{c.id} (X: #{c.x}, Y: #{c.y})" itemValue="#{c.id}" />
+                            </p:selectOneMenu>
+                        </div>
+
+                        <div style="display: flex; gap: 10px;">
+                            <div style="flex: 1;">
+                                <label>Новый X (макс 176):</label>
+                                <p:inputNumber value="#{cityBean.newCoordX}" maxValue="176.0" decimalPlaces="2"
+                                               validatorMessage="Координата X не может быть больше 176!" />
+                            </div>
+                            <div style="flex: 1;">
+                                <label>Новый Y:</label>
+                                <p:inputNumber value="#{cityBean.newCoordY}" decimalPlaces="0" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field" style="grid-column: span 2; background: #eef2f7; padding: 10px; border-radius: 6px;">
+                        <h4>Губернатор (Возраст > 0)</h4>
+                        <label>Возраст губернатора</label>
+                        <p:inputNumber value="#{cityBean.newGovernor.age}" minValue="1" decimalPlaces="0"
+                                       validatorMessage="Возраст губернатора должен быть строго больше 0!" />
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
+                    <p:commandButton value="Отмена" icon="pi pi-times" onclick="PF('cityDialog').hide()" styleClass="p-button-secondary" type="button" />
+                    <!-- Добавили обновление dialogMessages при нажатии "Сохранить": -->
+                    <p:commandButton value="Сохранить" icon="pi pi-check"
+                                     action="#{cityBean.saveCity}"
+                                     update=":mainForm:citiesTable :messages dialogMessages"
+                                     oncomplete="if (!args.validationFailed) PF('cityDialog').hide()" />
+                </div>
+            </p:outputPanel>
+        </p:dialog>
+    </h:form>
+
+
+    <h:form id="specialOpsForm">
+        <p:dialog id="specialOpsDialog" header="Специальные операции" widgetVar="specialOpsDialog" modal="true" width="600px">
+            <p:accordionPanel multiple="true">
+
+
+                <p:tab title="1. Сумма высот всех городов">
+                    <p:commandButton value="Рассчитать сумму" action="#{specialOpsBean.calculateSumMeters}" update=":messages sumResult" />
+                    <h:panelGroup id="sumResult" layout="block" style="margin-top: 10px;">
+                        <h:outputText value="Результат: #{specialOpsBean.sumMetersResult} м" rendered="#{specialOpsBean.sumMetersResult != null}" style="font-weight: bold; color: green;" />
+                    </h:panelGroup>
+                </p:tab>
+
+                <p:tab title="2. Количество городов с высотой выше заданной">
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <p:inputNumber value="#{specialOpsBean.targetMeters}" placeholder="Высота (м)" />
+                        <p:commandButton value="Найти" action="#{specialOpsBean.calculateCountAboveMeters}" update=":messages countResult" />
+                    </div>
+                    <h:panelGroup id="countResult" layout="block" style="margin-top: 10px;">
+                        <h:outputText value="Найдено городов: #{specialOpsBean.countAboveMetersResult}" rendered="#{specialOpsBean.countAboveMetersResult != null}" style="font-weight: bold; color: green;" />
+                    </h:panelGroup>
+                </p:tab>
+
+                <p:tab title="3. Уникальные значения высот">
+                    <p:commandButton value="Получить список" action="#{specialOpsBean.calculateUniqueMeters}" update=":messages uniqueResult" />
+                    <h:panelGroup id="uniqueResult" layout="block" style="margin-top: 10px;">
+                        <h:outputText value="Уникальные высоты: #{specialOpsBean.uniqueMetersList}"
+                                      rendered="#{not empty specialOpsBean.uniqueMetersList}"
+                                      style="font-weight: bold; color: #2196F3; font-size: 16px;" />
+                    </h:panelGroup>
+                </p:tab>
+
+
+                <p:tab title="4. Переселить всё население города в город с мин. населением">
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <p:inputNumber value="#{specialOpsBean.relocateFromCityId}" placeholder="ID города-донора" decimalPlaces="0" />
+                        <p:commandButton value="Переселить" action="#{specialOpsBean.relocateToMinCity}" update=":mainForm:citiesTable :messages" />
+                    </div>
+                </p:tab>
+
+                <p:tab title="5. Переселить 50% столицы в 3 города с мин. населением">
+                    <p:commandButton value="Выполнить распределение жителей столицы"
+                                     action="#{specialOpsBean.relocateCapital}"
+                                     styleClass="p-button-warning"
+                                     update=":mainForm:citiesTable :messages" />
+                </p:tab>
+            </p:accordionPanel>
+        </p:dialog>
+    </h:form>
+
+</h:body>
+</html>
